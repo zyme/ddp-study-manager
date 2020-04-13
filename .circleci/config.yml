@@ -14,9 +14,6 @@ executors:
 commands:
   app-build-and-store:
     description: Run build and store archive of it
-    parameters:
-      study_key:
-        type: string
     steps:
       - setup-build-workspace
       - setup-shared-env
@@ -266,19 +263,12 @@ jobs:
       - checkout
       - conditionally-launch-build-and-store:
           study_key: osteo
-      - conditionally-launch-build-and-store:
-          study_key: brain
-      - conditionally-launch-build-and-store:
-          study_key: angio
-      - conditionally-launch-build-and-store:
-          study_key: mbc
 
   app-build-and-store-job:
     executor:
       name: commit-executor
     steps:
-      - app-build-and-store:
-          study_key: << pipeline.parameters.study_key >>
+      - app-build-and-store
 
   osteo-deploy-only:
     executor:
@@ -288,57 +278,12 @@ jobs:
           study_key: osteo
           study_guid: CMI-OSTEO
 
-  brain-deploy-only:
-    executor:
-      name: commit-executor
-    steps:
-      - deploy-stored-build: &brain-params
-          study_key: brain
-          study_guid: cmi-brain
-
-  angio-deploy-only:
-    executor:
-      name: commit-executor
-    steps:
-      - deploy-stored-build: &angio-params
-          study_key: angio
-          study_guid: ANGIO
-
-  mbc-deploy-only:
-    executor:
-      name: commit-executor
-    steps:
-      - deploy-stored-build: &mbc-params
-          study_key: mbc
-          study_guid: cmi-mbc
-
   osteo-build-and-deploy:
     executor:
       name: commit-executor
     steps:
       - app-build-and-deploy:
           <<: *osteo-params
-
-  angio-build-and-deploy:
-    executor:
-      name: commit-executor
-    steps:
-      - app-build-and-deploy:
-          <<: *angio-params
-
-  brain-build-and-deploy:
-    executor:
-      name: commit-executor
-    steps:
-      - app-build-and-deploy:
-          <<: *brain-params
-
-  mbc-build-and-deploy:
-    executor:
-      name: commit-executor
-    steps:
-      - app-build-and-deploy:
-          <<: *mbc-params
 
 parameters:
   study_key:
@@ -360,12 +305,6 @@ workflows:
                 - develop
                 - angular-appengine-deployment-ctd-2
                 - circleci
-      - brain-build-and-deploy:
-          <<: *build-and-deploy-filters
-      - angio-build-and-deploy:
-          <<: *build-and-deploy-filters
-      - mbc-build-and-deploy:
-          <<: *build-and-deploy-filters
 
   launch-all-app-builds-workflow:
     # using do-builds param to select which of the two workflows using the build-on-tag-filters
@@ -394,12 +333,6 @@ workflows:
                 - test
                 - staging
                 - production
-      - brain-deploy-only:
-          <<: *deploy-filters
-      - mbc-deploy-only:
-          <<: *deploy-filters
-      - angio-deploy-only:
-          <<: *deploy-filters
 
   nightly:
     triggers:
@@ -412,9 +345,3 @@ workflows:
     jobs:
       - osteo-build-and-deploy:
           name: osteo-nightly
-      - angio-build-and-deploy:
-          name: angio-nightly
-      - brain-build-and-deploy:
-          name: brain-nightly
-      - mbc-build-and-deploy:
-          name: mbc-nightly
