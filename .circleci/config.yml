@@ -9,7 +9,7 @@ executors:
   commit-executor:
     docker:
       - image: broadinstitute/study-server-build:03-04-2020A
-    working_directory: ~/repo
+    working_directory: ~/repo/client
 
 commands:
   app-build-and-store:
@@ -82,7 +82,7 @@ commands:
       - setup-shared-env
       - set-deployment-environment
       - run:
-          name: Retrieve and expand build archive for << parameters.study_key >> with git SHA << pipeline.git.revision >>
+          name: Retrieve and expand build archive for git SHA << pipeline.git.revision >>
           command: |
             set -u
             # we are getting our builds from the one bucket
@@ -97,7 +97,7 @@ commands:
             fi
             TAR_FILE_PATH="/tmp/$(basename -- $TAR_FILE_URL)"
             gsutil cp  $TAR_FILE_URL $TAR_FILE_PATH
-            cd ~/repo/ddp-workspace
+            cd ~/repo/client
             mkdir -p $OUTPUT_DIR && tar -xvf $TAR_FILE_PATH -C $OUTPUT_DIR
             echo "Contents of extracted archive at $OUTPUT_DIR"
             ls -l $OUTPUT_DIR
@@ -138,14 +138,8 @@ commands:
           name: Deploy to GAE
           command: |
             set -u
-            gcloud app deploy --version="${SHORT_GIT_SHA}" --stop-previous-version --project "broad-ddp-${ENVIRONMENT}" "${ANGULAR_PROJECT_DIR_PATH}/app.yaml"
-          working_directory: ~/repo/ddp-workspace
-      - run:
-          name: Update GAE dispatch file
-          command: |
-            set -u
-            gcloud app deploy --project "broad-ddp-${ENVIRONMENT}" "${ANGULAR_PROJECT_DIR_PATH}/output-config/dispatch.yaml"
-          working_directory: ~/repo/ddp-workspace
+            gcloud app deploy --version="${SHORT_GIT_SHA}" --stop-previous-version --project "broad-ddp-${ENVIRONMENT}" "app.yaml"
+          working_directory: ~/repo/client
       - run:
           name: Update deployments sheet
           command: |
@@ -153,7 +147,7 @@ commands:
             TZ=America/New_York
             DATE=`TZ=$TZ date +%F`
             TIME=`TZ=$TZ date +%T`
-            COMPONENT='<<parameters.study_key>> Angular client'
+            COMPONENT='ddp-study-manager'
             BRANCH=<< pipeline.git.branch >>
             # Picking up any tags attached to the current commit
             TAG=`git tag --points-at HEAD | xargs`
@@ -187,7 +181,7 @@ commands:
       - run:
           name: npm install
           command: npm install
-          working_directory: ~/repo/ddp-workspace
+          working_directory: ~/repo/client
       - save_cache:
           key: *npm_cache_key
           paths:
@@ -200,8 +194,8 @@ commands:
           name: ng build
           command: |
             set -u
-            ng build $ANGULAR_PROJECT_NAME --prod --aot --base-href=/ --output-path=$OUTPUT_DIR --verbose=true --progress=true
-          working_directory: ~/repo/ddp-workspace
+            ng build --prod --aot --base-href=/ --output-path=$OUTPUT_DIR --verbose=true --progress=true
+          working_directory: ~/repo/client
 
   store-app-build:
     description: "Copy build to cloud storage"
