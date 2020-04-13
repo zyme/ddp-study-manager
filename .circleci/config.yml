@@ -2,7 +2,7 @@ version: 2.1
 
 references:
   npm_cache_key: &npm_cache_key
-                   v1-dependency-npm-{{ checksum "package-lock.json" }}
+                   v1-dependency-npm-{{ checksum "client/package-lock.json" }}
 
 # Container for all the builds
 executors:
