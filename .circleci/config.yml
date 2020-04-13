@@ -253,7 +253,7 @@ jobs:
     executor:
       name: commit-executor
     steps:
-      - app-build-and-deploy
+      - manager-build-and-deploy
 
 parameters:
   do-builds:
