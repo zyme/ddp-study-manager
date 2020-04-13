@@ -253,7 +253,12 @@ jobs:
     executor:
       name: commit-executor
     steps:
-      - manager-build-and-deploy
+      - app-build-and-deploy
+
+parameters:
+  do-builds:
+    type: boolean
+    default: false
 
 workflows:
   version: 2
