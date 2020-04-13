@@ -20,7 +20,7 @@ commands:
       - build-app
       - store-app-build
 
-  app-build-and-deploy:
+  manager-build-and-deploy:
     description: Run build and immediately deploy it to GAE
     parameters:
       study_key:
@@ -261,8 +261,7 @@ jobs:
       name: commit-executor
     steps:
       - checkout
-      - conditionally-launch-build-and-store:
-          study_key: osteo
+      - conditionally-launch-build-and-store
 
   app-build-and-store-job:
     executor:
@@ -270,35 +269,24 @@ jobs:
     steps:
       - app-build-and-store
 
-  osteo-deploy-only:
+  manager-deploy-only:
     executor:
       name: commit-executor
     steps:
-      - deploy-stored-build: &osteo-params
-          study_key: osteo
-          study_guid: CMI-OSTEO
+      - deploy-stored-build
 
-  osteo-build-and-deploy:
+  manager-build-and-deploy:
     executor:
       name: commit-executor
     steps:
-      - app-build-and-deploy:
-          <<: *osteo-params
-
-parameters:
-  study_key:
-    type: string
-    default: "UNKNOWN"
-  do-builds:
-    type: boolean
-    default: false
+      - manager-build-and-deploy
 
 workflows:
   version: 2
 
   build-and-deploy-all-apps-workflow:
     jobs:
-      - osteo-build-and-deploy: &build-and-deploy-filters
+      - manager-build-and-deploy: &build-and-deploy-filters
           filters:
             branches:
               only:
@@ -326,22 +314,10 @@ workflows:
 
   deploy-all-apps-workflow:
     jobs:
-      - osteo-deploy-only: &deploy-filters
+      - manager-deploy-only: &deploy-filters
           filters:
             branches:
               only:
                 - test
                 - staging
                 - production
-
-  nightly:
-    triggers:
-      - schedule:
-          cron: "0 22 * * *"
-          filters:
-            branches:
-              only:
-                - develop
-    jobs:
-      - osteo-build-and-deploy:
-          name: osteo-nightly
