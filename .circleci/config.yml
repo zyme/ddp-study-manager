@@ -22,18 +22,11 @@ commands:
 
   manager-build-and-deploy:
     description: Run build and immediately deploy it to GAE
-    parameters:
-      study_key:
-        type: string
-      study_guid:
-        type: string
     steps:
       - setup-build-workspace
       - setup-shared-env
       - build-app
-      - deploy-exploded-build:
-          study_key: << parameters.study_key >>
-          study_guid: << parameters.study_guid >>
+      - deploy-exploded-build
 
   set-deployment-environment:
     description: "Determine working environment"
@@ -98,17 +91,10 @@ commands:
             mkdir -p $OUTPUT_DIR && tar -xvf $TAR_FILE_PATH -C $OUTPUT_DIR
             echo "Contents of extracted archive at $OUTPUT_DIR"
             ls -l $OUTPUT_DIR
-      - deploy-exploded-build:
-          study_key: << parameters.study_key >>
-          study_guid: << parameters.study_guid >>
+      - deploy-exploded-build
 
   deploy-exploded-build:
     description: Deploy files to GAE
-    parameters:
-      study_key:
-        type: string
-      study_guid:
-        type: string
     steps:
       - set-deployment-environment
       - run:
