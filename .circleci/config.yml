@@ -61,11 +61,6 @@ commands:
 
   deploy-stored-build:
     description: Deploy archived build to GAE
-    parameters:
-      study_key:
-        type: string
-      study_guid:
-        type: string
     steps:
       - checkout:
           path: ~/repo
@@ -98,10 +93,10 @@ commands:
     steps:
       - set-deployment-environment
       - run:
-          name: <<parameters.study_key>> generate config files and copy pepperConfig.js
+          name: generate config files and copy pepperConfig.js
           command: |
             set -u
-            ./build-study.sh v1 $ENVIRONMENT . <<parameters.study_key>> <<parameters.study_guid>> --config
+            ./build-study.sh v1 $ENVIRONMENT . --config
             cd ddp-workspace
             CONFIG_DIR="${OUTPUT_DIR}/assets/config"
             mkdir -p $CONFIG_DIR
@@ -208,19 +203,16 @@ commands:
 
   conditionally-launch-build-and-store:
     description: Launch build and save job if build missing
-    parameters:
-      study_key:
-        type: string
     steps:
       - setup-shared-env
       - run:
-          name: Initiate build for <<parameters.study_key>> and git SHA << pipeline.git.revision >> if existing one not found
+          name: Initiate build for git SHA << pipeline.git.revision >> if existing one not found
           command: |
             set -u
             set +e
             # Looking for latest build of this project in Google bucket
             readvault.sh secret/pepper/prod/v1/conf .data.gcp.serviceKey | gcloud auth activate-service-account --key-file=-
-            TAR_FILE_URL_PATTERN="gs://${BUILDS_BUCKET}/${ANGULAR_PROJECT_NAME}/${ANGULAR_PROJECT_NAME}_*_${SHORT_GIT_SHA}.tar.gz"
+            TAR_FILE_URL_PATTERN="gs://${BUILDS_BUCKET}/ddp-study-manager_*_${SHORT_GIT_SHA}.tar.gz"
             echo "Checking for ${TAR_FILE_URL_PATTERN}"
             # For some reason following line generating exit code 1 every time in CircleCI. Use set +e so script can continue
             TAR_FILE_URL=`gsutil ls $TAR_FILE_URL_PATTERN  | head -1`
@@ -228,16 +220,12 @@ commands:
             # if not found, let's kick off a build
             if [ -z $TAR_FILE_URL ]
               then
-                echo "No build found for <<parameters.study_key>> with git sha ${SHORT_GIT_SHA}. Initiating a build for it."
+                echo "No build found for git sha ${SHORT_GIT_SHA}. Initiating a build for it."
                 curl -u "${CIRCLE_API_TOKEN}:" -X POST --header "Content-Type: application/json" -d '{
-                  "branch": "<< pipeline.git.branch >>",
-                  "parameters": {
-                      "study_key": "<<parameters.study_key>>",
-                      "do-builds": true
-                  }
+                  "branch": "<< pipeline.git.branch >>"
                 }' https://circleci.com/api/v2/project/gh/broadinstitute/ddp-angular/pipeline
               else
-                echo "Build for <<parameters.study_key>> found at URL: ${TAR_FILE_URL}. No new build will be initiated"
+                echo "Build for study manager found at URL: ${TAR_FILE_URL}. No new build will be initiated"
             fi
 
 jobs:
