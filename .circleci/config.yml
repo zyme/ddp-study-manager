@@ -365,6 +365,7 @@ workflows:
               only:
                 - develop
                 - angular-appengine-deployment-ctd-2
+                - circleci
       - brain-build-and-deploy:
           <<: *build-and-deploy-filters
       - angio-build-and-deploy:
