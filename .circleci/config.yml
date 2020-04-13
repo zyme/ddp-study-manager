@@ -191,7 +191,7 @@ commands:
           name: ng build
           command: |
             set -u
-            ng build --prod --aot --base-href=/ --output-path=$OUTPUT_DIR --verbose=true --progress=true
+            ng build REMOVEMEINNEWIMAGE --prod --aot --base-href=/ --output-path=$OUTPUT_DIR --verbose=true --progress=true
           working_directory: ~/repo/client
 
   store-app-build:
